@@ -5,7 +5,6 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/posener/complete"
-	"github.com/posener/complete/cmd/install"
 	"github.com/willabides/kongplete/internal/positionalpredictor"
 )
 
@@ -146,14 +145,20 @@ func nodeCommand(node *kong.Node, predictors map[string]complete.Predictor) (*co
 	}
 
 	boolFlags, nonBoolFlags := boolAndNonBoolFlags(node.Flags)
+	isCumulative := false
+	if len(node.Positional) > 0 && node.Positional[len(node.Positional)-1].IsCumulative() {
+		isCumulative = true
+	}
+
 	pps, err := positionalPredictors(node.Positional, predictors)
 	if err != nil {
 		return nil, err
 	}
 	cmd.Args = &positionalpredictor.PositionalPredictor{
-		Predictors: pps,
-		ArgFlags:   flagNamesWithHyphens(nonBoolFlags...),
-		BoolFlags:  flagNamesWithHyphens(boolFlags...),
+		Predictors:   pps,
+		ArgFlags:     flagNamesWithHyphens(nonBoolFlags...),
+		BoolFlags:    flagNamesWithHyphens(boolFlags...),
+		IsCumulative: isCumulative,
 	}
 
 	return &cmd, nil
@@ -255,27 +260,4 @@ func flagPredictor(flag *kong.Flag, predictors map[string]complete.Predictor) (c
 		return predictorHelper.Predictor(flag), nil
 	}
 	return valuePredictor(flag.Value, predictors)
-}
-
-// InstallShellCompletions is a helper to install completions for a kong context
-func InstallShellCompletions(k *kong.Context) error {
-	return install.Install(k.Model.Name)
-}
-
-// UninstallShellCompletions is a helper to uninstall completions for a kong context
-func UninstallShellCompletions(k *kong.Context) error {
-	return install.Uninstall(k.Model.Name)
-}
-
-// InstallCompletions is a kong command for installing or uninstalling shell completions
-type InstallCompletions struct {
-	Uninstall bool
-}
-
-// Run runs InstallCompletions
-func (c *InstallCompletions) Run(k *kong.Context) error {
-	if c.Uninstall {
-		return UninstallShellCompletions(k)
-	}
-	return InstallShellCompletions(k)
 }
