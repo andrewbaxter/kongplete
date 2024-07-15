@@ -19,8 +19,7 @@ const (
 	envPoint = "COMP_POINT"
 )
 
-type Mapper struct {
-}
+type Mapper struct{}
 
 func (_ *Mapper) Decode(ctx *kong.DecodeContext, target reflect.Value) error {
 	return nil
@@ -75,7 +74,7 @@ func TestComplete(t *testing.T) {
 		},
 		{
 			parser: kong.Must(&cli),
-			want:   []string{"foo", "bar", "pos"},
+			want:   []string{"foo", "bar", "mappy", "pos"},
 			line:   "myApp ",
 		},
 		{
